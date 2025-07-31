@@ -1,0 +1,29 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f172a;
+  color: #f1f5f9;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  background: #1e293b;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 1rem;
+  color: #34d399;
+}
+
+.status p {
+  margin: 0.3rem 0;
+  font-size: 1.1rem;
+}

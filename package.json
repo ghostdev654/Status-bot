@@ -1,16 +1,11 @@
 {
   "name": "status-bot",
   "version": "1.0.0",
-  "description": "Dashboard para monitorear bots en tiempo real",
   "main": "index.js",
-  "type": "module",
   "scripts": {
-    "dev": "node index.js"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "ghostdev",
-  "license": "MIT",
   "dependencies": {
-    "@types/node": "^22.13.11"
-  }
+  "node-fetch": "^3.3.2"
+}
 }

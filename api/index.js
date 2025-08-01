@@ -1,44 +1,85 @@
-const http = require('http');
-const { parse } = require('url');
-const { updateServer, getBotStatus } = require('./data');
+const url = require('url');
 
-const PORT = process.env.PORT || 3000;
+const serverData = new Map();
+const SERVER_TIMEOUT = 5000;
 
-const server = http.createServer((req, res) => {
-  const urlParsed = parse(req.url, true);
+function cleanupOfflineServers() {
+  const now = Date.now();
+  for (const [serverId, data] of serverData.entries()) {
+    if (now - data.lastSeen > SERVER_TIMEOUT) {
+      serverData.set(serverId, {
+        ...data,
+        status: 'offline',
+        uptime: 0
+      });
+    }
+  }
+}
 
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  if (req.method === "OPTIONS") return res.end();
+setInterval(cleanupOfflineServers, 2000);
 
-  if (urlParsed.pathname === '/api/status' && req.method === 'GET') {
-    const botId = urlParsed.query.bot || 'status-bot';
-    const status = getBotStatus(botId);
-    res.writeHead(200, { "Content-Type": "application/json" });
-    return res.end(JSON.stringify(status, null, 2));
+module.exports = (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') return res.end();
+
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+
+  if (pathname === '/api/status' && req.method === 'GET') {
+    const botId = parsedUrl.query.bot || 'status-bot';
+    cleanupOfflineServers();
+    const serverInfo = serverData.get(botId) || {
+      name: botId,
+      status: 'offline',
+      uptime: 0,
+      subBots: 0,
+      ramUsed: 0,
+      cpuUsage: 0,
+      lastUpdate: new Date().toISOString()
+    };
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      bot: serverInfo,
+      server: {
+        status: serverInfo.status === 'online' ? 'operational' : 'offline',
+        location: "Render Cloud",
+        responseTime: "<100ms"
+      }
+    }));
   }
 
-  if (urlParsed.pathname === '/api/server-update' && req.method === 'POST') {
+  else if (pathname === '/api/server-update' && req.method === 'POST') {
     let body = '';
-    req.on('data', chunk => body += chunk.toString());
+    req.on('data', chunk => body += chunk);
     req.on('end', () => {
       try {
         const data = JSON.parse(body);
-        const ok = updateServer(data);
-        res.writeHead(ok ? 200 : 400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify(ok ? { success: true } : { error: "Invalid or missing serverId" }));
-      } catch {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Invalid JSON" }));
+        serverData.set(data.serverId, {
+          name: data.serverId,
+          status: data.status || 'online',
+          uptime: data.uptime || 0,
+          subBots: data.subBots || 0,
+          ramUsed: data.ramUsed || 0,
+          cpuUsage: data.cpuUsage || 0,
+          lastSeen: Date.now(),
+          lastUpdate: new Date().toISOString()
+        });
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON' }));
       }
     });
-    return;
   }
 
-  res.writeHead(404, { "Content-Type": "application/json" });
-  res.end(JSON.stringify({ error: "Not found" }));
-});
-
-server.listen(PORT, () => console.log(`🌐 API corriendo en puerto ${PORT}`));
+  else {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+  }
+};

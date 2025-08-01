@@ -1,66 +1,75 @@
+const serverData = new Map();
+const TIMEOUT = 5000;
 
-// API endpoint para obtener el estado del bot
-function handleStatus(req, res) {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const botId = url.searchParams.get('bot') || 'status-bot';
-  
-  const botData = {
-    'status-bot': {
-      name: "Status Bot",
-      status: "online",
-      uptime: process.uptime(),
-      version: "1.0.0",
-      lastUpdate: new Date().toISOString()
-    },
-    'moderation-bot': {
-      name: "Moderation Bot",
-      status: "online",
-      uptime: process.uptime() * 0.8,
-      version: "2.1.0",
-      lastUpdate: new Date().toISOString()
-    },
-    'music-bot': {
-      name: "Music Bot",
-      status: "offline",
-      uptime: 0,
-      version: "1.5.2",
-      lastUpdate: new Date().toISOString()
-    },
-    'welcome-bot': {
-      name: "Welcome Bot",
-      status: "online",
-      uptime: process.uptime() * 1.2,
-      version: "1.3.0",
-      lastUpdate: new Date().toISOString()
-    }
-  };
-
-  const statusData = {
-    bot: botData[botId] || botData['status-bot'],
-    server: {
-      status: "operational",
-      responseTime: "< 100ms",
-      location: "Replit Cloud"
-    },
-    services: [
-      {
-        name: "Web Interface",
-        status: "operational",
-        description: "Status page web interface"
-      },
-      {
-        name: "API",
-        status: "operational", 
-        description: "Status API endpoint"
-      }
-    ]
-  };
-
-  res.writeHead(200, { 
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*'
+function updateServer({ serverId, uptime = 0, status = 'online', subBots = 0, ramUsed = 0, cpuUsage = 0 }) {
+  if (!serverId) return false;
+  serverData.set(serverId, {
+    name: getBotName(serverId),
+    status,
+    uptime,
+    subBots,
+    ramUsed,
+    cpuUsage,
+    lastUpdate: new Date().toISOString(),
+    lastSeen: Date.now()
   });
-  res.end(JSON.stringify(statusData, null, 2));
+  return true;
 }
 
-module.exports = handleStatus;
+function getBotStatus(botId = 'status-bot') {
+  cleanup();
+  const data = serverData.get(botId) || {
+    name: getBotName(botId),
+    status: 'offline',
+    uptime: 0,
+    subBots: 0,
+    ramUsed: 0,
+    cpuUsage: 0,
+    lastUpdate: new Date().toISOString()
+  };
+
+  return {
+    bot: {
+      name: data.name,
+      status: data.status,
+      uptime: data.uptime,
+      subBots: data.subBots,
+      ramUsed: data.ramUsed,
+      cpuUsage: data.cpuUsage,
+      version: "1.0.0",
+      lastUpdate: data.lastUpdate
+    },
+    server: {
+      status: data.status === 'online' ? 'operational' : 'down',
+      responseTime: data.status === 'online' ? '< 100ms' : 'timeout',
+      location: 'Render Cloud'
+    },
+    services: [
+      { name: 'Web Interface', status: 'operational', description: 'Status page web interface' },
+      { name: 'API', status: 'operational', description: 'Status API endpoint' }
+    ]
+  };
+}
+
+function cleanup() {
+  const now = Date.now();
+  for (const [id, data] of serverData.entries()) {
+    if (now - data.lastSeen > TIMEOUT) {
+      serverData.set(id, {
+        ...data,
+        status: 'offline',
+        uptime: 0
+      });
+    }
+  }
+}
+
+function getBotName(id) {
+  return {
+    'status-bot': 'メ Ġᶏmԑя Bot',
+    'azura': 'Azura Ultra 2.0',
+    'suki': 'Suki Bot'
+  }[id] || id;
+}
+
+module.exports = { updateServer, getBotStatus };

@@ -1,5 +1,5 @@
 const express = require('express');
-const serverRoutes = require('./routes/serverRoutes');
+const serverRoutes = require('./api/routes/serverRoutes.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

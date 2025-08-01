@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estado del Servidor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Estado del Bot -->
+    <section class="card">
+      <h1>Estado del Bot</h1>
+      <div class="status-item">
+        <div class="status-indicator" id="bot-status-indicator"></div>
+        <div>
+          <p><strong>Status Bot</strong></p>
+          <p id="bot-status-text">Estado: offline | Uptime: 0s</p>
+          <p id="bot-sub-bots">Sub-Bots: 0</p>
+          <p id="bot-resources">RAM: 0MB | CPU: 0%</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Servicios -->
+    <section class="card">
+      <h1>Servicios</h1>
+      <div class="status-item">
+        <div class="status-indicator" id="web-interface-indicator"></div>
+        <div>
+          <p><strong>Web Interface</strong></p>
+          <p>Status page web interface</p>
+        </div>
+      </div>
+      <div class="status-item">
+        <div class="status-indicator" id="api-indicator"></div>
+        <div>
+          <p><strong>API</strong></p>
+          <p>Status API endpoint</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Información del Servidor -->
+    <section class="card">
+      <h1>Información del Servidor</h1>
+      <p><strong>Estado:</strong> <span id="server-status">offline</span></p>
+      <p><strong>Tiempo de respuesta:</strong> <span id="response-time">&lt;100ms</span></p>
+      <p><strong>Ubicación:</strong> <span id="server-location">Desconocida</span></p>
+    </section>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

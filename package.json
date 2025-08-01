@@ -1,14 +1,15 @@
 {
-  "name": "nodejs",
+  "name": "status-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Dashboard para monitorear bots en tiempo real",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node index.js"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "ghostdev",
+  "license": "MIT",
   "dependencies": {
     "@types/node": "^22.13.11"
   }

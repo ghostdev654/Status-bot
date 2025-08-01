@@ -1,4 +1,4 @@
-const apiUrl = 'https://<tu-backend-en-render>.onrender.com/api/status'; // Cambia esto por tu URL de Render
+const apiUrl = 'https://dashboard-stats.onrender.com/api/status'; // Cambia esto por tu URL de Render
 
 async function fetchServerStatus() {
   try {

@@ -1,5 +1,5 @@
 const express = require('express');
-const { updateServerData, getServerStatus } = require('../controllers/serverController');
+const { updateServerData, getServerStatus } = require('../controllers/serverController.js');
 
 const router = express.Router();
 

@@ -1,0 +1,177 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Bot - Panel de Estado</title>
+    <link rel="stylesheet" href="/styles/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Status Bot</h1>
+            <p>Panel de estado en tiempo real</p>
+        </header>
+
+        <main>
+            <div class="status-card">
+                <h2>Seleccionar Bot</h2>
+                <div class="bot-selector">
+                    <button class="bot-button active" data-bot="status-bot" onclick="selectBot('status-bot')">
+                        🤖 メ Ġᶏmԑя Bot
+                    </button>
+                    <button class="bot-button" data-bot="moderation-bot" onclick="selectBot('moderation-bot')">
+                        🛡️ Moderation Bot
+                    </button>
+                    <button class="bot-button" data-bot="music-bot" onclick="selectBot('music-bot')">
+                        🎵 Music Bot
+                    </button>
+                    <button class="bot-button" data-bot="welcome-bot" onclick="selectBot('welcome-bot')">
+                        👋 Welcome Bot
+                    </button>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h2>Estado del Bot</h2>
+                <div id="bot-status" class="status-item">
+                    <span class="status-indicator loading"></span>
+                    <span>Cargando...</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h2>Servicios</h2>
+                <div id="services-list">
+                    <div class="status-item">
+                        <span class="status-indicator loading"></span>
+                        <span>Cargando servicios...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <h2>Información del Servidor</h2>
+                <div id="server-info">
+                    <p>Cargando información del servidor...</p>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Hora actual: <span id="current-time">--:--:--</span></p>
+            <p>Última actualización: <span id="last-update">--</span></p>
+            <button onclick="refreshStatus()">⟲ Actualizar</button>
+        </footer>
+    </div>
+
+    <script>
+        let currentBot = 'status-bot';
+
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            if (days > 0) {
+                return `${days}d ${hours}h ${minutes}m`;
+            } else if (hours > 0) {
+                return `${hours}h ${minutes}m ${secs}s`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            } else {
+                return `${secs}s`;
+            }
+        }
+
+        function selectBot(botId) {
+            currentBot = botId;
+            
+            // Actualizar botones activos
+            document.querySelectorAll('.bot-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-bot="${botId}"]`).classList.add('active');
+            
+            // Cargar estado del bot seleccionado
+            loadStatus();
+        }
+
+        async function loadStatus() {
+            try {
+                const response = await fetch(`/api/status?bot=${currentBot}`);
+                const data = await response.json();
+                
+                // Actualizar estado del bot
+                const botStatus = document.getElementById('bot-status');
+                botStatus.innerHTML = `
+                    <span class="status-indicator ${data.bot.status}"></span>
+                    <div>
+                        <strong>${data.bot.name}</strong>
+                        <p>Estado: ${data.bot.status} | Uptime: ${formatUptime(data.bot.uptime)}</p>
+                        <p>Sub-Bots: ${data.bot.subBots || 0}</p>
+                        <p>RAM: ${data.bot.ramUsed || 0}MB | CPU: ${data.bot.cpuUsage || 0}%</p>
+                    </div>
+                `;
+
+                // Actualizar servicios
+                const servicesList = document.getElementById('services-list');
+                servicesList.innerHTML = data.services.map(service => `
+                    <div class="status-item">
+                        <span class="status-indicator ${service.status}"></span>
+                        <div>
+                            <strong>${service.name}</strong>
+                            <p>${service.description}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Actualizar información del servidor
+                const serverInfo = document.getElementById('server-info');
+                serverInfo.innerHTML = `
+                    <p><strong>Estado:</strong> ${data.server.status}</p>
+                    <p><strong>Tiempo de respuesta:</strong> ${data.server.responseTime}</p>
+                    <p><strong>Ubicación:</strong> ${data.server.location}</p>
+                `;
+
+                // Actualizar timestamp
+                document.getElementById('last-update').textContent = 
+                    new Date(data.bot.lastUpdate).toLocaleString('es');
+
+            } catch (error) {
+                console.error('Error loading status:', error);
+                document.getElementById('bot-status').innerHTML = `
+                    <span class="status-indicator error"></span>
+                    <span>Error al cargar el estado</span>
+                `;
+            }
+        }
+
+        function refreshStatus() {
+            loadStatus();
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Cargar estado inicial
+        loadStatus();
+
+        // Actualizar hora inicial
+        updateTime();
+
+        // Auto-refresh cada 30 segundos para el estado
+        setInterval(loadStatus, 3000);
+
+        // Actualizar hora cada segundo
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>
